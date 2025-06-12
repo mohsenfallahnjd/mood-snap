@@ -160,7 +160,7 @@ export const HistoryPage: FC = () => {
         </div>
       </div>
 
-      <div className="p-6 bg-white rounded-lg shadow-lg max-w-3xl mx-auto">
+      <div className="p-4 sm:p-6 bg-white rounded-lg shadow-lg max-w-3xl mx-auto">
         {/* Card Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
           <h2 className="text-2xl font-semibold text-gray-800">Your Mood Trends</h2>
@@ -173,7 +173,7 @@ export const HistoryPage: FC = () => {
         </div>
 
         {/* Chart Container with subtle gradient background */}
-        <div className="w-full h-96 rounded-lg p-4">
+        <div className="w-full">
           {chartType === "line" ? <Line options={options} data={data} /> : <Bar options={options} data={data} />}
         </div>
       </div>

@@ -18,7 +18,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 text-center mt-16">
+    <div className="max-w-md mx-auto p-6 text-center h-180 flex flex-col justify-center">
       {/* Greeting & Streak */}
       <h1 className="text-2xl font-semibold mb-6">How are you feeling today?</h1>
       {streakEnabled && streak > 0 && (
