@@ -1,16 +1,14 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
-// 1. ورودی‌های روزانه: key: 'moodSnap:entries'
 export const entriesAtom = atomWithStorage<Record<string, "good" | "neutral" | "bad">>("moodSnap:entries", {});
 
-// 2. زبان
 // export const languageAtom = atomWithStorage<string>("moodSnap:settings:language", "fa");
 
-// 3. یادآور فعال/غیرفعال
 export const reminderAtom = atomWithStorage<boolean>("moodSnap:settings:reminderEnabled", false);
 
-// 4. اتم مشتق برای درصد مثبت ماه (مثال)
+export const streakAtom = atomWithStorage<boolean>("moodSnap:settings:streakEnabled", false);
+
 export const positiveRateAtom = atom((get) => {
   const entries = get(entriesAtom);
   const today = new Date();
@@ -23,3 +21,24 @@ export const positiveRateAtom = atom((get) => {
   const positiveCount = days.filter(([, m]) => m === "good").length;
   return Math.round((positiveCount / days.length) * 100);
 });
+
+export function calculateStreak(
+  entries: Record<string, "good" | "neutral" | "bad">,
+  todayStr = new Date().toISOString().slice(0, 10)
+): number {
+  let streak = 0;
+  let cursor = new Date(todayStr);
+
+  while (true) {
+    const key = cursor.toISOString().slice(0, 10);
+    if (entries[key]) {
+      streak++;
+      // move back one day
+      cursor.setDate(cursor.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}

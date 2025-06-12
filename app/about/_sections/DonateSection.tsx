@@ -12,7 +12,7 @@ const TRON_ADDRESS = "TMENErUuaajAmJoenppG4qohhqzXuu7fgp";
 
 export const DonateSection: FC = () => {
   return (
-    <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+    <div className="mt-8 p-6 bg-gray-50 rounded-lg" id="donate">
       <h2 className="text-xl font-semibold mb-4">Support MoodSnap</h2>
       <p className="mb-4">If you enjoy using MoodSnap, consider supporting us!</p>
 

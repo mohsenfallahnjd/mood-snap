@@ -11,7 +11,7 @@ export const AboutPage: FC = () => {
   // }, [language]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 mt-16">
       <h1 className="text-3xl font-bold">About MoodSnap</h1>
       <p>
         MoodSnap helps you track your daily mood with a simple click, visualize your emotional trends, and reflect on

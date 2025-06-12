@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import type { Viewport } from "next";
+import { Navbar } from "./_sections/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -44,29 +44,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <header className="bg-white shadow p-4">
-          <nav className="container mx-auto flex space-x-6">
-            <Link href="/" className="text-gray-700 hover:text-blue-500">
-              Home
-            </Link>
-            <Link href="/history" className="text-gray-700 hover:text-blue-500">
-              History
-            </Link>
-            <Link
-              href={`/report/${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, "0")}`}
-              className="text-gray-700 hover:text-blue-500"
-            >
-              Report
-            </Link>
-            <Link href="/settings" className="text-gray-700 hover:text-blue-500">
-              Settings
-            </Link>
-            <Link href="/about" className="text-gray-700 hover:text-blue-500">
-              About
-            </Link>
-          </nav>
-        </header>
-        <main className="container mx-auto py-6">{children}</main>
+        <Navbar />
+        <main className="container mx-auto py-6 min-h-screen">{children}</main>
       </body>
     </html>
   );

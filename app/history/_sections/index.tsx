@@ -1,9 +1,9 @@
+// app/history/page.tsx
 "use client";
 
-import { type FC, useEffect, useState } from "react";
-import { useAtomValue } from "jotai";
+import { type FC, useMemo, useState } from "react";
+import { useAtom } from "jotai";
 import { entriesAtom } from "@/utils/atoms";
-import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,89 +11,171 @@ import {
   PointElement,
   LineElement,
   BarElement,
-  Title,
   Tooltip,
   Legend,
+  Title,
+  type ChartOptions,
+  Filler,
 } from "chart.js";
+import { Bar, Line } from "react-chartjs-2";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
-
-const formatLast28Days = (entries: Record<string, "good" | "neutral" | "bad">) => {
-  const today = new Date();
-  const days: string[] = [];
-  for (let i = 27; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
-  }
-  const moods = days.map((date) => entries[date] || "neutral");
-  return { days, moods };
-};
-
-const chartOptions = {
-  responsive: true,
-  scales: {
-    y: { beginAtZero: true, max: 2, ticks: { stepSize: 1 } },
-  },
-};
-
-const moodToValue = (mood: string) => {
-  if (mood === "good") {
-    return 2;
-  }
-  if (mood === "neutral") {
-    return 1;
-  }
-  if (mood === "bad") {
-    return 0;
-  }
-  return 1;
-};
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Tooltip,
+  Legend,
+  Title,
+  ChartDataLabels,
+  Filler
+);
 
 export const HistoryPage: FC = () => {
-  const entries = useAtomValue(entriesAtom);
+  const [entries] = useAtom(entriesAtom);
   const [chartType, setChartType] = useState<"line" | "bar">("line");
-  const [data, setData] = useState({ labels: [] as string[], datasets: [] as any[] });
 
-  useEffect(() => {
-    const { days, moods } = formatLast28Days(entries);
-    const values = moods.map((m) => moodToValue(m));
-    setData({
-      labels: days,
-      datasets: [
-        {
-          label: "Mood Trend",
-          data: values,
-          borderColor: "rgba(54, 162, 235, 0.6)",
-          backgroundColor: "rgba(54, 162, 235, 0.4)",
-        },
-      ],
-    });
+  // Prepare last 28 days
+  const last28 = useMemo(() => {
+    const out: { date: string; value: number | null }[] = [];
+    for (let i = 27; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const mood = entries[key];
+      out.push({
+        date: key,
+        value: mood === "good" ? 2 : mood === "neutral" ? 1 : mood === "bad" ? 0 : null,
+      });
+    }
+    return out;
   }, [entries]);
 
+  const labels = last28.map((d) => d.date.slice(5)); // "MM-DD"
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: "Mood over time",
+        data: last28.map((d) => d.value),
+        borderColor: "rgba(59, 130, 246, 0.8)",
+        backgroundColor: function (context: any) {
+          const value = context.dataset.data[context.dataIndex];
+
+          if (value === 2) {
+            return "rgba(34,197,94,0.5)"; // good = green
+          }
+          if (value === 1) {
+            return "rgba(234,179,8,0.5)"; // neutral = yellow
+          }
+          if (value === 0) {
+            return "rgba(239,68,68,0.5)"; // bad = red
+          }
+          return "transparent";
+        },
+        tension: 0.3,
+        fill: true,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+      },
+    ],
+  };
+
+  const options: ChartOptions<"line" | "bar"> = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: "Last 28 Days",
+        font: { size: 18 },
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => {
+            const val = ctx.parsed.y;
+            const mood = val === 2 ? "Good" : val === 1 ? "Neutral" : "Bad";
+            return `${mood} (${val})`;
+          },
+        },
+      },
+      datalabels: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        min: 0,
+        max: 2,
+        ticks: {
+          stepSize: 1,
+          callback: (v: any) => (v === 2 ? "😊" : v === 1 ? "😐" : "😞"),
+        },
+      },
+    },
+    animations: {
+      tension: {
+        duration: 1000,
+        easing: "linear",
+        from: 1,
+        to: 0,
+      },
+    },
+  };
+
+  // Summary counts
+  const summary = useMemo(() => {
+    let good = 0,
+      neutral = 0,
+      bad = 0;
+    last28.forEach((d) => {
+      if (d.value === 2) {
+        good++;
+      } else if (d.value === 1) {
+        neutral++;
+      } else if (d.value === 0) {
+        bad++;
+      }
+    });
+    return { good, neutral, bad };
+  }, [last28]);
+
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">History & Trends</h1>
-      <div className="flex space-x-4">
-        <button
-          onClick={() => setChartType("line")}
-          className={`px-4 py-2 rounded ${chartType === "line" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-        >
-          Line
-        </button>
-        <button
-          onClick={() => setChartType("bar")}
-          className={`px-4 py-2 rounded ${chartType === "bar" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-        >
-          Bar
-        </button>
+    <div className="space-y-6 p-4 max-w-3xl mx-auto mt-16">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="bg-green-100 p-4 rounded-lg text-center">
+          <p className="text-lg font-semibold">😊 Good</p>
+          <p className="text-2xl">{summary.good}</p>
+        </div>
+        <div className="bg-yellow-100 p-4 rounded-lg text-center">
+          <p className="text-lg font-semibold">😐 Neutral</p>
+          <p className="text-2xl">{summary.neutral}</p>
+        </div>
+        <div className="bg-red-100 p-4 rounded-lg text-center">
+          <p className="text-lg font-semibold">😞 Bad</p>
+          <p className="text-2xl">{summary.bad}</p>
+        </div>
       </div>
-      <div className="w-full h-96">
-        {chartType === "line" ? (
-          <Line options={chartOptions} data={data} />
-        ) : (
-          <Bar options={chartOptions} data={data} />
-        )}
+
+      <div className="p-6 bg-white rounded-lg shadow-lg max-w-3xl mx-auto">
+        {/* Card Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h2 className="text-2xl font-semibold text-gray-800">Your Mood Trends</h2>
+          <button
+            onClick={() => setChartType(chartType === "line" ? "bar" : "line")}
+            className="mt-2 sm:mt-0 inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition"
+          >
+            {chartType === "line" ? <>📊 Bar Chart</> : <>📈 Line Chart</>}
+          </button>
+        </div>
+
+        {/* Chart Container with subtle gradient background */}
+        <div className="w-full h-96 rounded-lg p-4">
+          {chartType === "line" ? <Line options={options} data={data} /> : <Bar options={options} data={data} />}
+        </div>
       </div>
     </div>
   );
