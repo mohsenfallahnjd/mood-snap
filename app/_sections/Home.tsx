@@ -44,42 +44,28 @@ export default function HomePage() {
   const handleShare = async () => {
     const el = document.getElementById("shareable-area");
     if (!el) {
-      alert("Nothing to share yet!");
+      alert("Nothing to share!");
       return;
     }
-
-    // 1) Capture snapshot
     const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#fff" });
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r));
-    if (!blob) {
-      alert("Failed to capture snapshot");
-      return;
-    }
-
-    const file = new File([blob], "moodsnap.png", { type: "image/png" });
-    const shareData: ShareData = {
-      files: [file],
-      title: "My MoodSnap Entry",
-      text: `Hey! How are you feeling today? I’m feeling ${selected || "🤔"}!`,
-      url: "https://moodsnap.me",
-    };
-
-    // 2) Attempt native share (mobile)
-    if (navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData);
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        alert("Nothing to share!");
         return;
-      } catch (err) {
-        console.warn("Native share failed:", err);
       }
-    }
-
-    // 3) Fallback for Telegram and others: share URL only
-    const shareUrl = encodeURIComponent("https://moodsnap.me");
-    const shareText = encodeURIComponent(`I’m feeling ${selected || "🤔"} today on MoodSnap!`);
-    // Telegram share link
-    const telegramLink = `https://t.me/share/url?url=${shareUrl}&text=${shareText}`;
-    window.open(telegramLink, "_blank");
+      const file = new File([blob], "moodsnap.png", { type: "image/png" });
+      const data: ShareData = {
+        files: [file],
+        title: "My MoodSnap",
+        text: `Hey! How are you feeling today? I’m feeling ${selected || "🤔"}!`,
+        url: "https://moodsnap.me",
+      };
+      if (navigator.canShare?.(data)) {
+        navigator.share(data);
+      } else {
+        window.open(URL.createObjectURL(blob), "_blank");
+      }
+    });
   };
 
   return (
