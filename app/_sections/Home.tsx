@@ -5,8 +5,14 @@ import { useAtom } from "jotai";
 import { entriesAtom, calculateStreak, streakAtom } from "@/utils/atoms";
 import { useRouter } from "next/navigation";
 import html2canvas from "html2canvas";
-import { ChartBarIcon, ShareIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon, ChartBarIcon, ShareIcon } from "@heroicons/react/24/solid";
 import { useEffect, useState } from "react";
+
+const moodMap = {
+  good: "/images/moods/good.png",
+  neutral: "/images/moods/neutral.png",
+  bad: "/images/moods/bad.png",
+};
 
 export default function HomePage() {
   const [entries, setEntries] = useAtom(entriesAtom);
@@ -14,47 +20,70 @@ export default function HomePage() {
   const today = new Date().toISOString().slice(0, 10);
   const [justRecorded, setJustRecorded] = useState(!!entries[today]);
   const streak = calculateStreak(entries, today);
+  const [selected, setSelected] = useState<"good" | "neutral" | "bad" | null>(entries[today]);
 
   const [streakEnabled] = useAtom(streakAtom);
   useEffect(() => {
     setTimeout(() => {
       setJustRecorded(!!entries[today]);
+      setSelected(entries[today]);
     }, 500);
   }, [entries, today]);
 
   const handlePick = (mood: "good" | "neutral" | "bad") => {
     setEntries({ ...entries, [today]: mood });
     setJustRecorded(true);
+    setSelected(mood);
+  };
+
+  const handleRecordAgain = () => {
+    setJustRecorded(false);
+    setSelected(null);
   };
 
   const handleShare = async () => {
     const el = document.getElementById("shareable-area");
     if (!el) {
-      return alert("Nothing to share yet!");
+      alert("Nothing to share yet!");
+      return;
     }
-    const canvas = await html2canvas(el, { scale: 2 });
-    canvas.toBlob(async (blob) => {
-      if (!blob) {
-        return;
-      }
-      const file = new File([blob], "moodsnap.png", { type: "image/png" });
-      const shareData: ShareData = {
-        files: [file],
-        title: "My MoodSnap Entry",
-        text: `I’m feeling ${entries[today] || "🤔"} today! How are you feeling today?`,
-        url: "https://moodsnap.me",
-      };
-      if (navigator.canShare?.(shareData)) {
+
+    // 1) Capture snapshot
+    const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#fff" });
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r));
+    if (!blob) {
+      alert("Failed to capture snapshot");
+      return;
+    }
+
+    const file = new File([blob], "moodsnap.png", { type: "image/png" });
+    const shareData: ShareData = {
+      files: [file],
+      title: "My MoodSnap Entry",
+      text: `Hey! How are you feeling today? I’m feeling ${selected || "🤔"}!`,
+      url: "https://moodsnap.me",
+    };
+
+    // 2) Attempt native share (mobile)
+    if (navigator.canShare?.(shareData)) {
+      try {
         await navigator.share(shareData);
-      } else {
-        const url = URL.createObjectURL(blob);
-        window.open(url, "_blank");
+        return;
+      } catch (err) {
+        console.warn("Native share failed:", err);
       }
-    });
+    }
+
+    // 3) Fallback for Telegram and others: share URL only
+    const shareUrl = encodeURIComponent("https://moodsnap.me");
+    const shareText = encodeURIComponent(`I’m feeling ${selected || "🤔"} today on MoodSnap!`);
+    // Telegram share link
+    const telegramLink = `https://t.me/share/url?url=${shareUrl}&text=${shareText}`;
+    window.open(telegramLink, "_blank");
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 text-center h-180 flex flex-col justify-center">
+    <div className="w-full mx-auto p-6 text-center h-180 flex flex-col justify-center">
       {/* Motivational Quote */}
       {/* <blockquote className="italic text-gray-700 mb-6">“Happiness is a journey, not a destination.”</blockquote> */}
       {/* Wrap the mood picker so it’s shareable */}
@@ -63,25 +92,47 @@ export default function HomePage() {
           You’re on a <span className="font-semibold text-blue-500">{streak}-day streak</span>!
         </p>
       )}
-      <div id="shareable-area" className="text-center">
+
+      <div
+        id="shareable-area"
+        className="w-full max-w-[500px] mx-auto bg-white rounded-xl shadow-lg p-6 flex flex-col items-center"
+      >
         {/* Greeting & Streak */}
         <h1 className="text-2xl font-semibold mb-6">How are you feeling today?</h1>
-        <div className="flex justify-center space-x-8 mb-8">
-          <button onClick={() => handlePick("good")} className="text-6xl hover:scale-110 transition">
-            😊
-          </button>
-          <button onClick={() => handlePick("neutral")} className="text-6xl hover:scale-110 transition">
-            😐
-          </button>
-          <button onClick={() => handlePick("bad")} className="text-6xl hover:scale-110 transition">
-            😞
-          </button>
-        </div>
+
+        {selected ? (
+          // Show the selected mood image
+          <img src={moodMap[selected]} alt={selected} className="w-24 h-24 mb-4" />
+        ) : (
+          // Otherwise show the three picker buttons
+          <div className="flex space-x-6">
+            {(["good", "neutral", "bad"] as const).map((m) => (
+              <button key={m} onClick={() => handlePick(m)}>
+                <img src={moodMap[m]} alt={m} className="w-16 h-16 hover:scale-110 transition" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Site link in the snapshot */}
+        <p className="mt-auto text-xs" style={{ color: "#6b7280" }}>
+          moodsnap.me
+        </p>
       </div>
 
       {justRecorded && (
-        <div className="flex flex-col items-center space-y-3 fade-in-up">
-          <span className="px-4 py-2 mb-5 bg-green-100 text-green-800 rounded-full">Mood recorded!</span>
+        <div className="mt-12 flex flex-col items-center space-y-3 fade-in-up w-full max-w-[500px] mx-auto">
+          <div className="w-full flex justify-center items-center space-x-3">
+            <span className=" px-4 py-2 bg-green-100 text-green-800 rounded-full">Mood recorded!</span>
+
+            <button
+              onClick={handleRecordAgain}
+              className="inline-flex items-center justify-center shadow-lg rounded-full p-2 bg-white text-black rounded border border-gray-200 transition"
+            >
+              <ArrowPathIcon className="w-5 h-5" />
+            </button>
+          </div>
+
           <button
             onClick={() => router.push(`/report/${today.slice(0, 4)}/${today.slice(5, 7)}`)}
             className="w-full inline-flex items-center justify-center shadow-lg rounded-full px-5 py-2 bg-yellow-300 text-black rounded hover:bg-yellow-400 transition"
@@ -111,16 +162,6 @@ export default function HomePage() {
           </button>
         </div>
       )}
-
-      {/* Quick Links */}
-      {/* <div className="flex justify-center space-x-4 mb-6">
-        <Link href={`/report/${today.slice(0, 4)}/${today.slice(5, 7)}`}>
-          <span className="px-4 py-2 bg-blue-100 rounded hover:bg-blue-200 transition">Today’s Report</span>
-        </Link>
-        <Link href="/history">
-          <span className="px-4 py-2 bg-green-100 rounded hover:bg-green-200 transition">View Trends</span>
-        </Link>
-      </div> */}
 
       {/* Donate */}
       <div className="mt-12 text-sm text-gray-500">
