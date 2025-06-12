@@ -1,10 +1,16 @@
 "use client";
 
-import { type FC, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 import Link from "next/link";
 
 export const Navbar: FC = () => {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch((err) => console.error("SW registration failed:", err));
+    }
+  }, []);
 
   const links = [
     { href: "/", label: "Home" },
@@ -15,6 +21,7 @@ export const Navbar: FC = () => {
     },
     { href: "/settings", label: "Settings" },
     { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
   ];
 
   return (

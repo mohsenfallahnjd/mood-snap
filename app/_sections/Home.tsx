@@ -80,7 +80,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-full mx-auto p-6 text-center h-180 flex flex-col justify-center">
+    <div className="w-full mx-auto p-6 text-center flex flex-col justify-center mt-20">
       {/* Motivational Quote */}
       {/* <blockquote className="italic text-gray-700 mb-6">“Happiness is a journey, not a destination.”</blockquote> */}
       {/* Wrap the mood picker so it’s shareable */}

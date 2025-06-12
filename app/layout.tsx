@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import type { Viewport } from "next";
 import { Navbar } from "./_sections/Navbar";
+import { Footer } from "./_sections/Footer";
+import type { Metadata } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,9 +12,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   userScalable: false,
+  themeColor: "#3B82F6",
 };
 
-export const metadata = {
+export const metadata: Metadata = {
   metadataBase: new URL("https://moodsnap.me"),
   title: "MoodSnap – Simple Daily Mood Tracker",
   description:
@@ -38,6 +41,12 @@ export const metadata = {
     description: "Record your mood in seconds and explore your emotional trends.",
     images: ["/images/twitter-image.png"],
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    title: "MoodSnap",
+    capable: true,
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -45,7 +54,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body className={inter.className}>
         <Navbar />
-        <main className="container mx-auto py-6 min-h-screen">{children}</main>
+        <main className="container mx-auto py-6 min-h-[calc(100vh-100px)]">{children}</main>
+        <Footer />
       </body>
     </html>
   );

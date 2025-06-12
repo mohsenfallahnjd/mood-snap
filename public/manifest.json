@@ -1,0 +1,9 @@
+{
+  "name": "MoodSnap",
+  "short_name": "MoodSnap",
+  "description": "Quick daily mood tracker",
+  "start_url": "/?source=pwa",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6"
+}

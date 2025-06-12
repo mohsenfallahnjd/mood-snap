@@ -1,7 +1,7 @@
 {
   "version": 4,
   "routes": {
-    "/history": {
+    "/settings": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -14,8 +14,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/history",
-      "dataRoute": "/history.rsc",
+      "srcRoute": "/settings",
+      "dataRoute": "/settings.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -25,7 +25,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/": {
+    "/contact": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -38,8 +38,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/",
-      "dataRoute": "/index.rsc",
+      "srcRoute": "/contact",
+      "dataRoute": "/contact.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -78,6 +78,30 @@
         "x-next-revalidate-tag-token"
       ]
     },
+    "/history": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/history",
+      "dataRoute": "/history.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
     "/about": {
       "experimentalBypassFor": [
         {
@@ -102,7 +126,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/settings": {
+    "/": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -115,8 +139,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/settings",
-      "dataRoute": "/settings.rsc",
+      "srcRoute": "/",
+      "dataRoute": "/index.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -130,8 +154,8 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "559f94c7621265ff617a50c89d1f6ee6",
-    "previewModeSigningKey": "3c49e7f152b52f082d950572c8847aca0e2f52b9ecb82017a155e74862ceb68d",
-    "previewModeEncryptionKey": "af03b5fca9a47c0a3a9b93cc656b4a730a3a02aae2d6b5fa372193366698fd71"
+    "previewModeId": "9502491b07d4b549e1859287e7f0c271",
+    "previewModeSigningKey": "a93e17cafd8015bc6329cfd548bb60073fcb73c327cd910fb17375591f6de492",
+    "previewModeEncryptionKey": "4f3e1990894a462a8c2c99457b17caf69554a78139d3f6f18e61ec7e107a3d61"
   }
 }

@@ -1,9 +1,10 @@
 {
   "/favicon.ico/route": "/favicon.ico",
-  "/history/page": "/history",
+  "/contact/page": "/contact",
   "/_not-found/page": "/_not-found",
   "/about/page": "/about",
-  "/settings/page": "/settings",
   "/report/[year]/[month]/page": "/report/[year]/[month]",
-  "/page": "/"
+  "/settings/page": "/settings",
+  "/page": "/",
+  "/history/page": "/history"
 }
