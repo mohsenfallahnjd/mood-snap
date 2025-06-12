@@ -5,8 +5,10 @@ import { useAtom } from "jotai";
 import { entriesAtom, calculateStreak, streakAtom } from "@/utils/atoms";
 import { useRouter } from "next/navigation";
 import html2canvas from "html2canvas";
-import { ArrowPathIcon, ChartBarIcon, ShareIcon } from "@heroicons/react/24/solid";
+import { ArrowDownTrayIcon, ArrowPathIcon, ChartBarIcon } from "@heroicons/react/24/solid";
 import { useEffect, useState } from "react";
+import { ShareIcon } from "@heroicons/react/24/outline";
+import { ShareModal } from "./ShareModal";
 
 const moodMap = {
   good: "/images/moods/good.png",
@@ -21,7 +23,8 @@ export default function HomePage() {
   const [justRecorded, setJustRecorded] = useState(!!entries[today]);
   const streak = calculateStreak(entries, today);
   const [selected, setSelected] = useState<"good" | "neutral" | "bad" | null>(entries[today]);
-
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [streakEnabled] = useAtom(streakAtom);
   useEffect(() => {
     setTimeout(() => {
@@ -41,31 +44,39 @@ export default function HomePage() {
     setSelected(null);
   };
 
-  const handleShare = async () => {
+  const captureImage = async () => {
     const el = document.getElementById("shareable-area");
     if (!el) {
-      alert("Nothing to share!");
-      return;
+      return null;
     }
     const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#fff" });
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        alert("Nothing to share!");
+    return new Promise<Blob | null>((r) => canvas.toBlob(r));
+  };
+
+  const handleGlobalShare = async () => {
+    const blob = await captureImage();
+    const url = blob && URL.createObjectURL(blob);
+    setShareUrl(url);
+
+    const file = blob && new File([blob], "moodsnap.png", { type: "image/png" });
+    const shareData: ShareData = {
+      files: file ? [file] : undefined,
+      title: "My MoodSnap",
+      text: `How are you feeling today? I’m feeling ${entries[today] || "🤔"}!`,
+      url: "https://moodsnap.me",
+    };
+
+    // Try native share
+    if (navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
         return;
+      } catch {
+        console.log("Failed to share");
+
+        setIsShareModalOpen(true);
       }
-      const file = new File([blob], "moodsnap.png", { type: "image/png" });
-      const data: ShareData = {
-        files: [file],
-        title: "My MoodSnap",
-        text: `Hey! How are you feeling today? I’m feeling ${selected || "🤔"}!`,
-        url: "https://moodsnap.me",
-      };
-      if (navigator.canShare?.(data)) {
-        navigator.share(data);
-      } else {
-        window.open(URL.createObjectURL(blob), "_blank");
-      }
-    });
+    }
   };
 
   return (
@@ -128,7 +139,7 @@ export default function HomePage() {
           </button>
 
           <button
-            onClick={handleShare}
+            onClick={handleGlobalShare}
             className="
             w-full
     inline-flex items-center 
@@ -146,6 +157,16 @@ export default function HomePage() {
             <ShareIcon className="w-5 h-5 mr-2" />
             Share Your Mood
           </button>
+
+          {shareUrl && (
+            <a
+              href={shareUrl}
+              download="moodsnap.png"
+              className="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 w-full justify-center rounded-full shadow transition"
+            >
+              <ArrowDownTrayIcon className="w-5 h-5 mr-2" /> Download Image
+            </a>
+          )}
         </div>
       )}
 
@@ -156,6 +177,13 @@ export default function HomePage() {
           <span className="text-yellow-600 underline">Support us</span>
         </Link>
       </div>
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        text={`How are you feeling today? I’m feeling ${entries[today] || "🤔"}!`}
+        url="https://moodsnap.me"
+      />
     </div>
   );
 }

@@ -1,9 +1,9 @@
 {
   "/favicon.ico/route": "/favicon.ico",
-  "/page": "/",
-  "/_not-found/page": "/_not-found",
   "/history/page": "/history",
-  "/report/[year]/[month]/page": "/report/[year]/[month]",
+  "/_not-found/page": "/_not-found",
   "/about/page": "/about",
-  "/settings/page": "/settings"
+  "/settings/page": "/settings",
+  "/report/[year]/[month]/page": "/report/[year]/[month]",
+  "/page": "/"
 }
