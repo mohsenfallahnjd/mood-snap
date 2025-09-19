@@ -5,6 +5,7 @@ import type { Viewport } from "next";
 import { Navbar } from "./_sections/Navbar";
 import { Footer } from "./_sections/Footer";
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Navbar />
         <main className="container mx-auto py-6 min-h-[calc(100vh-100px)]">{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
